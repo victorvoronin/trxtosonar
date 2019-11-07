@@ -29,12 +29,14 @@ namespace TrxToSonar
             var solutionDirectoryOption = app.Option("-d","Solution Directory to parse.",CommandOptionType.SingleValue);
             var outputOption = app.Option("-o", "Output filename.", CommandOptionType.SingleValue);
             var absolutePathOption = app.Option("-a|--absolute", "Use Absolute Path", CommandOptionType.NoValue);
- 
+
             app.OnExecute(() => {
-                if (solutionDirectoryOption.HasValue() && outputOption.HasValue())
+                var solutionDirectory = solutionDirectoryOption.HasValue() ? solutionDirectoryOption.Value() : Environment.CurrentDirectory;
+
+                if (outputOption.HasValue())
                 {
                     var converter = serviceProvider.GetService<IConverter>();
-                    var sonarDocument = converter.Parse(solutionDirectoryOption.Value(), absolutePathOption.HasValue());
+                    var sonarDocument = converter.Parse(solutionDirectory, absolutePathOption.HasValue());
                     converter.Save(sonarDocument, outputOption.Value());
                 }
                 else {

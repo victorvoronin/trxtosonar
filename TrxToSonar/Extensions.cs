@@ -28,33 +28,28 @@ namespace TrxToSonar
 
         public static string GetTestFile(this UnitTest unitTest, string solutionDirectory, bool useAbsolutePath)
         {
-            var className = unitTest?.TestMethod?.ClassName;
+            var fullClassName = unitTest?.TestMethod?.ClassName;
 
-            if (string.IsNullOrEmpty(className))
-            {
-                return string.Empty;
-            }
+            if (string.IsNullOrEmpty(fullClassName)) throw new NullReferenceException("Class name was not provided");
 
-            var pathIndex = className.LastIndexOf(".", StringComparison.Ordinal);
-            var pathIndexLast = unitTest.TestMethod.CodeBase.IndexOf("\\bin\\", StringComparison.Ordinal);
-            var path = unitTest.TestMethod.CodeBase.Substring(0, pathIndexLast);
-            var pathIndexFirst = path.LastIndexOf("\\", StringComparison.Ordinal);
-            path = path.Substring(pathIndexFirst + 1);
+            var className = fullClassName.Split(".").Last();
+
+            var testProjectSignature = Path.Combine(".Tests", "bin");
+            var indexOfSignature = unitTest.TestMethod.CodeBase.IndexOf(testProjectSignature);
+            var projectDirectory = unitTest.TestMethod.CodeBase.Substring(0, indexOfSignature + 6);
+
+            var files = Directory.GetFiles(projectDirectory, $"{className}.cs", SearchOption.AllDirectories);
+
+            if (!files.Any()) throw new FileNotFoundException($"Cannot find file with class {className}. Check that file has the same name as the class.");
+            var result = files.First();
             
-            var filename = className.Substring(pathIndex + 1, className.Length - pathIndex - 1);
 
-            string result;
-            
             if (!useAbsolutePath)
-            {
-                result = string.Format("{0}.cs", Path.Combine(path, filename));
-            }
-            else
-            {
-                result = string.Format("{0}.cs", Path.Combine(solutionDirectory, path, filename));
+            {                
+                result = result.Substring(solutionDirectory.Length + 1);
             }
 
-            return result.Replace(" ", "\\\\ ");
+            return result;
         }
     }
 }

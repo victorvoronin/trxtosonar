@@ -79,46 +79,47 @@ namespace TrxToSonar
 
             foreach (var trxResult in trxDocument.Results)
             {
-                var unitTest = trxResult.GetUnitTest(trxDocument);
-
-                var testFile = unitTest.GetTestFile(solutionDirectory, useAbsolutePath);
-
-                /*
-                if (!System.IO.File.Exists(Path.Combine(solutionDirectory,testFile)))
+                try
                 {
-                    this.logger.LogWarning($"Test file seems to be wrong - Unable to find it: {testFile}");    
-                }
-                */
-                
-                var file = sonarDocument.GetFile(testFile);
+                    var unitTest = trxResult.GetUnitTest(trxDocument);
 
-                if (file == null)
-                {
-                    file = new File(testFile);
-                    sonarDocument.Files.Add(file);
-                }
+                    var testFile = unitTest.GetTestFile(solutionDirectory, useAbsolutePath);
 
-                var testCase = new TestCase(trxResult.TestName, Utils.ToSonarDuration(trxResult.Duration));
 
-                if (trxResult.Outcome != Outcome.Passed)
-                {
-                    if (trxResult.Outcome == Outcome.NotExecuted )
+                    var file = sonarDocument.GetFile(testFile);
+
+                    if (file == null)
                     {
-                        testCase.Skipped = new Skipped();
-                        this.logger.LogInformation($"Skipped: {trxResult.TestName}");
-                    }else
-                    {
-                        testCase.Failure = new Failure(trxResult.Output?.ErrorInfo?.Message, trxResult.Output?.ErrorInfo?.StackTrace);
-                        this.logger.LogInformation($"Failure: {trxResult.TestName}");
+                        file = new File(testFile);
+                        sonarDocument.Files.Add(file);
                     }
-                }
-                else
-                {
-                    this.logger.LogInformation($"Passed: {trxResult.TestName}");
-                }
 
-                file.TestCases.Add(testCase);
-                
+                    var testCase = new TestCase(trxResult.TestName, Utils.ToSonarDuration(trxResult.Duration));
+
+                    if (trxResult.Outcome != Outcome.Passed)
+                    {
+                        if (trxResult.Outcome == Outcome.NotExecuted)
+                        {
+                            testCase.Skipped = new Skipped();
+                            this.logger.LogInformation($"Skipped: {trxResult.TestName}");
+                        }
+                        else
+                        {
+                            testCase.Failure = new Failure(trxResult.Output?.ErrorInfo?.Message ?? string.Empty, trxResult.Output?.ErrorInfo?.StackTrace ?? string.Empty);
+                            this.logger.LogInformation($"Failure: {trxResult.TestName}");
+                        }
+                    }
+                    else
+                    {
+                        this.logger.LogInformation($"Passed: {trxResult.TestName}");
+                    }
+
+                    file.TestCases.Add(testCase);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogError(ex.Message);
+                }
             }
             return sonarDocument;
         }        
