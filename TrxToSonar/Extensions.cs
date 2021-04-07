@@ -46,7 +46,8 @@ namespace TrxToSonar
 
             if (!useAbsolutePath)
             {                
-                result = result.Substring(solutionDirectory.Length + 1);
+                var idx = result.LastIndexOf("backend", StringComparison.Ordinal);
+                result = result.Substring(idx + 8);
             }
 
             return result;
