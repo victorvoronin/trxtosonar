@@ -46,8 +46,8 @@ namespace TrxToSonar
 
             if (!useAbsolutePath)
             {                
-                var idx = result.LastIndexOf("backend", StringComparison.Ordinal);
-                result = result.Substring(idx + 8);
+                var idx = result.LastIndexOf("backend/qPCR", StringComparison.Ordinal);
+                result = result.Substring(idx + 13);
             }
 
             return result;
